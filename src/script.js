@@ -3,13 +3,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
 import * as CANNON from 'cannon-es'
 
-/**
- * Debug
- */
+//object
 const gui = new dat.GUI()
-const debugObject = {}
+const Object = {}
 
-debugObject.createSphere = () =>
+Object.createSphere = () =>
 {
     createSphere(
         Math.random() * 0.5,
@@ -21,9 +19,9 @@ debugObject.createSphere = () =>
     )
 }
 
-gui.add(debugObject, 'createSphere')
+gui.add(Object, 'createSphere')
 
-debugObject.createBox = () =>
+Object.createBox = () =>
 {
     createBox(
         Math.random(),
@@ -36,10 +34,10 @@ debugObject.createBox = () =>
         }
     )
 }
-gui.add(debugObject, 'createBox')
+gui.add(Object, 'createBox')
 
 // Reset
-debugObject.reset = () =>
+Object.reset = () =>
 {
     for(const object of objectsToUpdate)
     {
@@ -53,7 +51,7 @@ debugObject.reset = () =>
     
     objectsToUpdate.splice(0, objectsToUpdate.length)
 }
-gui.add(debugObject, 'reset')
+gui.add(Object, 'reset')
 
 /**
  * Base
@@ -130,7 +128,7 @@ world.addBody(floorBody)
 const objectsToUpdate = []
 
 // Create sphere
-const sphereGeometry = new THREE.SphereGeometry(1, 20, 20)
+const sphereGeometry = new THREE.SphereGeometry(4, 20, 20)
 const sphereMaterial = new THREE.MeshStandardMaterial({
     metalness: 0.3,
     roughness: 0.4,
@@ -205,6 +203,7 @@ createBox(1, 1.5, 2, { x: 0, y: 3, z: 0 })
  */
 
 //infinite plane
+
 const gridHelper = new THREE.GridHelper(200,50);
 scene.add(gridHelper);
 
