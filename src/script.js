@@ -9,6 +9,7 @@ const Object = {}
 
 Object.createSphere = () =>
 {
+    //make random sphere sizes
     createSphere(
         Math.random() * 0.5,
         {
@@ -170,6 +171,35 @@ const boxMaterial = new THREE.MeshStandardMaterial({
     envMap: environmentMapTexture,
     envMapIntensity: 0.5
 })
+
+//box primitive
+// const createBox = (width, height, depth, position) =>
+// {
+//     // Three.js mesh
+//     const mesh = new THREE.Mesh(boxGeometry, boxMaterial)
+//     mesh.scale.set(width, height, depth)
+//     mesh.castShadow = true
+//     mesh.position.copy(position)
+//     scene.add(mesh)
+
+//     // Cannon.js body
+//     const shape = new CANNON.Box(new CANNON.Vec3(width * 0.5, height * 0.5, depth * 0.5))
+
+//     const body = new CANNON.Body({
+//         mass: 1,
+//         position: new CANNON.Vec3(0, 3, 0),
+//         shape: shape,
+//         material: defaultMaterial
+//     })
+//     body.position.copy(position)
+//     body.addEventListener('collide', playHitSound)
+//     world.addBody(body)
+
+//     // Save in objects
+//     objectsToUpdate.push({ mesh, body })
+// }
+
+//box that is morphable 
 const createBox = (width, height, depth, position) =>
 {
     // Three.js mesh
@@ -184,19 +214,53 @@ const createBox = (width, height, depth, position) =>
 
     const body = new CANNON.Body({
         mass: 1,
-        position: new CANNON.Vec3(0, 3, 0),
+        position: new CANNON.Vec3(position.x, position.y, position.z),
         shape: shape,
         material: defaultMaterial
     })
-    body.position.copy(position)
     body.addEventListener('collide', playHitSound)
     world.addBody(body)
 
     // Save in objects
     objectsToUpdate.push({ mesh, body })
+
+    // Add mouse event listeners
+    let isDragging = false
+    let lastMousePosition = new THREE.Vector2()
+
+    canvas.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+        isDragging = true
+        lastMousePosition.set(event.clientX, event.clientY)
+    })
+
+    canvas.addEventListener('mousemove', (event) => {
+        event.preventDefault()
+        if (isDragging) {
+            const deltaX = event.clientX - lastMousePosition.x
+            const deltaY = event.clientY - lastMousePosition.y
+
+            // Scale the box based on mouse y position
+            mesh.scale.y += deltaY * 0.01
+
+            // Sculpt the box based on mouse x position
+            mesh.geometry.vertices.forEach(vertex => {
+                const distance = vertex.distanceTo(mesh.position)
+                const strength = 1 / (distance * 0.1)
+                vertex.add(new THREE.Vector3(deltaX * strength, deltaY * strength, 0))
+            })
+
+            mesh.geometry.verticesNeedUpdate = true
+            lastMousePosition.set(event.clientX, event.clientY)
+        }
+    })
+
+    canvas.addEventListener('mouseup', () => {
+        isDragging = false
+    })
 }
 
-createBox(1, 1.5, 2, { x: 0, y: 3, z: 0 })
+createBox(1, 1, 1, { x: 0, y: 3, z: 0 })
 
 /**
  * Floor
