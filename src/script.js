@@ -2,17 +2,37 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
 import * as CANNON from 'cannon-es'
+import { TransformControls } from 'three/addons/controls/TransformControls.js'
 
 //object
 const gui = new dat.GUI()
 const Object = {}
+const objectsToUpdate = [];
 
-Object.createSphere = () =>
+Object.Box = () =>
 {
-    //make random sphere sizes
-    createSphere(
-        Math.random() * 0.5,
+    Box(
+        //box size
+        1,
+        1,
+        1,
         {
+            //random position
+            x: (Math.random() - 0.5) * 3,
+            y: 3,
+            z: (Math.random() - 0.5) * 3
+        }
+    )
+}
+gui.add(Object, 'Box')
+
+Object.Sphere = () =>
+{
+    Sphere(
+        //sphere size
+        .15,
+        {
+            //random position
             x: (Math.random() - 0.5) * 3,
             y: 3,
             z: (Math.random() - 0.5) * 3
@@ -20,22 +40,19 @@ Object.createSphere = () =>
     )
 }
 
-gui.add(Object, 'createSphere')
+gui.add(Object, 'Sphere')
 
-Object.createBox = () =>
-{
-    createBox(
-        Math.random(),
-        Math.random(),
-        Math.random(),
-        {
-            x: (Math.random() - 0.5) * 3,
-            y: 3,
-            z: (Math.random() - 0.5) * 3
-        }
-    )
+// Add a flag to keep track of the state of the mouse drag transformation
+let enableMouseDrag = false;
+
+// Create a button to toggle the mouse drag transformation on and off
+Object.Scale = () => {
+    enableMouseDrag = !enableMouseDrag;
+    controls.enabled = enableMouseDrag;
 }
-gui.add(Object, 'createBox')
+gui.add(Object, 'Scale');
+
+
 
 // Reset
 Object.reset = () =>
@@ -53,6 +70,7 @@ Object.reset = () =>
     objectsToUpdate.splice(0, objectsToUpdate.length)
 }
 gui.add(Object, 'reset')
+
 
 /**
  * Base
@@ -126,7 +144,6 @@ world.addBody(floorBody)
 /**
  * Utils
  */
-const objectsToUpdate = []
 
 // Create sphere
 const sphereGeometry = new THREE.SphereGeometry(4, 20, 20)
@@ -137,7 +154,7 @@ const sphereMaterial = new THREE.MeshStandardMaterial({
     envMapIntensity: 0.5
 })
 
-const createSphere = (radius, position) =>
+const Sphere = (radius, position) =>
 {
     // Three.js mesh
     const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
@@ -172,35 +189,9 @@ const boxMaterial = new THREE.MeshStandardMaterial({
     envMapIntensity: 0.5
 })
 
-//box primitive
-// const createBox = (width, height, depth, position) =>
-// {
-//     // Three.js mesh
-//     const mesh = new THREE.Mesh(boxGeometry, boxMaterial)
-//     mesh.scale.set(width, height, depth)
-//     mesh.castShadow = true
-//     mesh.position.copy(position)
-//     scene.add(mesh)
-
-//     // Cannon.js body
-//     const shape = new CANNON.Box(new CANNON.Vec3(width * 0.5, height * 0.5, depth * 0.5))
-
-//     const body = new CANNON.Body({
-//         mass: 1,
-//         position: new CANNON.Vec3(0, 3, 0),
-//         shape: shape,
-//         material: defaultMaterial
-//     })
-//     body.position.copy(position)
-//     body.addEventListener('collide', playHitSound)
-//     world.addBody(body)
-
-//     // Save in objects
-//     objectsToUpdate.push({ mesh, body })
-// }
 
 //box that is morphable 
-const createBox = (width, height, depth, position) =>
+const Box = (width, height, depth, position) =>
 {
     // Three.js mesh
     const mesh = new THREE.Mesh(boxGeometry, boxMaterial)
@@ -230,28 +221,32 @@ const createBox = (width, height, depth, position) =>
 
     canvas.addEventListener('mousedown', (event) => {
         event.preventDefault()
-        isDragging = true
-        lastMousePosition.set(event.clientX, event.clientY)
+        if (enableMouseDrag) { // check if mouse drag is enabled
+            isDragging = true
+            lastMousePosition.set(event.clientX, event.clientY)
+        }
     })
 
     canvas.addEventListener('mousemove', (event) => {
         event.preventDefault()
-        if (isDragging) {
+        if (isDragging && enableMouseDrag) { // check if mouse drag is enabled
             const deltaX = event.clientX - lastMousePosition.x
             const deltaY = event.clientY - lastMousePosition.y
 
-            // Scale the box based on mouse y position
-            mesh.scale.y += deltaY * 0.01
-
+            // Scale the box based on mouse x and y position
+            //the higher the number, the more sensitive it is
+            mesh.scale.y += deltaY * 0.0001
+            mesh.scale.x += deltaX* 0.001
+            
             // Sculpt the box based on mouse x position
             mesh.geometry.vertices.forEach(vertex => {
                 const distance = vertex.distanceTo(mesh.position)
-                const strength = 1 / (distance * 0.1)
-                vertex.add(new THREE.Vector3(deltaX * strength, deltaY * strength, 0))
+                const strength = 1 / (distance * 0.01)
+                vertex.add(new THREE.Vector3(deltaX * strength, deltaY * strength, deltaZ*strength))
             })
 
             mesh.geometry.verticesNeedUpdate = true
-            lastMousePosition.set(event.clientX, event.clientY)
+            lastMousePosition.set(event.clientX, event.clientY, event.clientZ)
         }
     })
 
@@ -260,7 +255,8 @@ const createBox = (width, height, depth, position) =>
     })
 }
 
-createBox(1, 1, 1, { x: 0, y: 3, z: 0 })
+
+Box(1, 1, 1, { x: 0, y: 3, z: 0 })
 
 /**
  * Floor
