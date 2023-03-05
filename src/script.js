@@ -311,20 +311,6 @@ Box(1, 1, 1, { x: 0, y: 3, z: 0 })
 const gridHelper = new THREE.GridHelper(200,50);
 scene.add(gridHelper);
 
-// const floor = new THREE.Mesh(
-//     new THREE.PlaneGeometry(10, 10),
-//     new THREE.MeshStandardMaterial({
-//         color: '#777777',
-//         metalness: 0.3,
-//         roughness: 0.4,
-//         envMap: environmentMapTexture,
-//         envMapIntensity: 0.5
-//     })
-// )
-// floor.receiveShadow = true
-// floor.rotation.x = - Math.PI * 0.5
-// scene.add(floor)
-
 /**
  * Lights
  */
